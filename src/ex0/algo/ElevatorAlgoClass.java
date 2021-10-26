@@ -71,15 +71,4 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
     public void cmdElevator(int elev) {
 
     }
-
-    //method to initialize a call for specific elevator
-    private void call(Elevator e,CallForElevator c){
-        //going to destination
-        if(c.getState() == 2)
-            e.goTo(c.getDest());
-        //if the elevator is on the way to the source floor or arrived
-        else if(c.getState() ==1 || c.getState() == 0)
-            e.goTo(c.getDest());
-    }
-
 }
