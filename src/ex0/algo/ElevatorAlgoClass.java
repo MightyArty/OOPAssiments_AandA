@@ -2,7 +2,6 @@ package ex0.algo;
 
 import ex0.Building;
 import ex0.CallForElevator;
-import ex0.CallForElevatorClass;
 import ex0.Elevator;
 
 import java.util.ArrayList;
@@ -13,7 +12,8 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
     private Building building;
     private int direction;
     private Elevator[] elevatorsArr;
-    private ArrayList<CallForElevator> calls;
+    private ArrayList<Integer>[] elevatorDest;
+    private ArrayList<Integer>[] elevatorSrc;
 
     /*
     class constructor
@@ -23,7 +23,14 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
         this.direction = UP;
         int amountOfFloors = (this.building.maxFloor() - this.building.minFloor()) + 1; //amount of floors
         this.elevatorsArr = new Elevator[this.building.numberOfElevetors()];    //initialize arr with the number of elevators
-        this.calls = new ArrayList<CallForElevator>();  //initialize arr with amount of calls
+        this.elevatorDest = new ArrayList[this.building.numberOfElevetors()];
+        for(int i = 0; i < elevatorDest.length ; i++){
+            elevatorDest[i] = new ArrayList<>();
+        }
+        for(int i = 0 ; i < elevatorSrc.length ; i++){
+            elevatorSrc[i] = new ArrayList<>();
+        }
+
     }
 
     @Override
@@ -38,20 +45,30 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
 
     @Override
     public int allocateAnElevator(CallForElevator c) {
+        Building b = getBuilding();
         if(elevatorsArr.length == 0) {
             throw new NoSuchElementException("No elevators in this building");
         }
         else {
-            double mintime = this.arrivingTime(c, this.building.getElevetor(0));
+            double minTime = this.arrivingTime(c, this.building.getElevetor(0));
             int newell = 0;
-            for (int i = 1; i < elevatorsArr.length; i++) {
+            for (int i = 0; i < elevatorsArr.length; i++) {
                 Elevator e = this.building.getElevetor(i);
-                double curtime = this.arrivingTime(c, e);
-                if (curtime < mintime) {
-                    mintime = curtime;
+                double curTime = this.arrivingTime(c, e);
+                if (curTime < minTime) {
+                    minTime = curTime;
                     newell = i;
                 }
             }
+            if(elevatorDest[newell].size() == 0) {
+                this.elevatorDest[newell] = new ArrayList<>(c.getDest());
+            }
+            else {
+
+                this.elevatorDest[newell].add(c.getDest());
+            }
+
+
             return newell;
         }
     }
@@ -73,13 +90,24 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
     @Override
     public void cmdElevator(int elev) {
         Elevator e = this.building.getElevetor(elev);
-        CallForElevator c = new CallForElevatorClass();
+        e.goTo(elevatorSrc[elev].get(0));
+        e.stop(elevatorSrc[elev].get(0));
+
 
 
     }
 
-    private void getCalls(CallForElevator c,int index){
-
+    /*
+    sending elevator to source/destination
+     */
+    private void call(Elevator e,CallForElevator c){
+        if(c.getState() == 2){
+            e.goTo(c.getDest());
+        }
+        if(c.getState() == 1 || c.getState() == 0)
+            e.goTo(c.getSrc());
+        else
+            return;
     }
 
     //getting the direction of given elevator
