@@ -9,9 +9,9 @@ import java.util.Queue;
 public class ElevatorAlgoClass implements ElevatorAlgo {
 
     private final Building building;
-    private Queue<Integer>[] goup;
-    private Queue<Integer>[] godown;
-    private  Diraction[] elevdiraction;
+    private Queue<Integer>[] go_up;
+    private Queue<Integer>[] go_down;
+    private Diraction[] elevdiraction;
 
     /*
     class constructor
@@ -19,11 +19,11 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
     public ElevatorAlgoClass(Building building) {
         this.building = building;
         elevdiraction = new Diraction[this.building.numberOfElevetors()];
-        goup = new PriorityQueue[this.building.numberOfElevetors()];
-        godown = new PriorityQueue[this.building.numberOfElevetors()];
+        go_up = new PriorityQueue[this.building.numberOfElevetors()];
+        go_down = new PriorityQueue[this.building.numberOfElevetors()];
         for (int i = 0; i < building.numberOfElevetors(); i++) {
-            godown[i] = new PriorityQueue<>(Collections.reverseOrder());
-            goup[i] = new PriorityQueue<>();
+            go_down[i] = new PriorityQueue<>(Collections.reverseOrder());
+            go_up[i] = new PriorityQueue<>();
             elevdiraction[i] = Diraction.NON;
         }
     }
@@ -68,20 +68,20 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
     @Override
     public int allocateAnElevator(CallForElevator c) {
         int ans = best(c);
-        if(goup[ans].isEmpty() && godown[ans].isEmpty()){
+        if(go_up[ans].isEmpty() && go_down[ans].isEmpty()){
             this.building.getElevetor(ans).goTo(c.getSrc());
             this.building.getElevetor(ans).goTo(c.getDest());
         }
-        else
-        {if (c.getSrc() < c.getDest()){
+        else {
+               if (c.getSrc() < c.getDest()){
             elevdiraction[ans] = Diraction.UP;
-            goup[ans].add(c.getSrc());
-            goup[ans].add(c.getDest());
+            go_up[ans].add(c.getSrc());
+            go_up[ans].add(c.getDest());
         }
         else {
             elevdiraction[ans] = Diraction.DOWN;
-            godown[ans].add(c.getSrc());
-            godown[ans].add(c.getDest());
+            go_down[ans].add(c.getSrc());
+            go_down[ans].add(c.getDest());
         }}
         // אם המעלית לא עוברת התור של הירידה וגם לא עוברת על התר של העליה אז לשלוח אותה כבר מעכשיו לקומת המקור של הקריאה ולשנות את בהתאם הכל
 
@@ -95,12 +95,12 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
             // if up
             if (elevdiraction[elev] == Diraction.UP) {
                 // still need to go up
-                if (goup[elev].isEmpty() == false) {
-                    this.building.getElevetor(elev).goTo(goup[elev].poll());
+                if (go_up[elev].isEmpty() == false) {
+                    this.building.getElevetor(elev).goTo(go_up[elev].poll());
                     // need to change to down
-                } else if (godown[elev].isEmpty() == false) {
+                } else if (go_down[elev].isEmpty() == false) {
                     elevdiraction[elev] = Diraction.DOWN;
-                    this.building.getElevetor(elev).goTo(godown[elev].poll());
+                    this.building.getElevetor(elev).goTo(go_down[elev].poll());
                     // no more calls
                 } else {
                     elevdiraction[elev] = Diraction.NON;
@@ -108,12 +108,12 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
                 // if down
             } else {
                 // still need to go down
-                if (godown[elev].isEmpty() == false) {
-                    this.building.getElevetor(elev).goTo(godown[elev].poll());
+                if (go_down[elev].isEmpty() == false) {
+                    this.building.getElevetor(elev).goTo(go_down[elev].poll());
                     // need to change to up
-                } else if (goup[elev].isEmpty() == false) {
+                } else if (go_up[elev].isEmpty() == false) {
                     elevdiraction[elev] = Diraction.UP;
-                    this.building.getElevetor(elev).goTo(goup[elev].poll());
+                    this.building.getElevetor(elev).goTo(go_up[elev].poll());
                     // no more calls
                 } else {
                     elevdiraction[elev] = Diraction.NON;
