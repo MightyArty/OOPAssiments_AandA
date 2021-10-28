@@ -1,36 +1,31 @@
 package ex0.algo;
-
 import ex0.Building;
 import ex0.CallForElevator;
 import ex0.Elevator;
-
-import java.util.ArrayList;
-import java.util.NoSuchElementException;
+import java.util.Collections;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 public class ElevatorAlgoClass implements ElevatorAlgo {
-    private final int UP=1,DOWN=-1;
-    private Building building;
-    private int direction;
-    private Elevator[] elevatorsArr;
-    private ArrayList<Integer>[] elevatorDest;
-    private ArrayList<Integer>[] elevatorSrc;
+
+    private final Building building;
+    private Queue<Integer>[] goup;
+    private Queue<Integer>[] godown;
+    private  Diraction[] elevdiraction;
 
     /*
     class constructor
      */
-    public ElevatorAlgoClass(Building building){
+    public ElevatorAlgoClass(Building building) {
         this.building = building;
-        this.direction = UP;
-        int amountOfFloors = (this.building.maxFloor() - this.building.minFloor()) + 1; //amount of floors
-        this.elevatorsArr = new Elevator[this.building.numberOfElevetors()];    //initialize arr with the number of elevators
-        this.elevatorDest = new ArrayList[this.building.numberOfElevetors()];
-        for(int i = 0; i < elevatorDest.length ; i++){
-            elevatorDest[i] = new ArrayList<>();
+        elevdiraction = new Diraction[this.building.numberOfElevetors()];
+        goup = new PriorityQueue[this.building.numberOfElevetors()];
+        godown = new PriorityQueue[this.building.numberOfElevetors()];
+        for (int i = 0; i < building.numberOfElevetors(); i++) {
+            godown[i] = new PriorityQueue<>(Collections.reverseOrder());
+            goup[i] = new PriorityQueue<>();
+            elevdiraction[i] = Diraction.NON;
         }
-        for(int i = 0 ; i < elevatorSrc.length ; i++){
-            elevatorSrc[i] = new ArrayList<>();
-        }
-
     }
 
     @Override
@@ -43,85 +38,87 @@ public class ElevatorAlgoClass implements ElevatorAlgo {
         return "Ex0_Elevators_Algorithm";
     }
 
-    @Override
-    public int allocateAnElevator(CallForElevator c) {
-        Building b = getBuilding();
-        if(elevatorsArr.length == 0) {
-            throw new NoSuchElementException("No elevators in this building");
+    private int best(CallForElevator c) {
+        double minTime = this.arrivingTime(c, this.building.getElevetor(0));
+        int newell = 0;
+        for (int i = 1; i < this.building.numberOfElevetors(); i++) {
+            double curTime = this.arrivingTime(c, this.building.getElevetor(i));
+            if (curTime < minTime) {
+                minTime = curTime;
+                newell = i;
+            }
         }
-        else {
-            double minTime = this.arrivingTime(c, this.building.getElevetor(0));
-            int newell = 0;
-            for (int i = 0; i < elevatorsArr.length; i++) {
-                Elevator e = this.building.getElevetor(i);
-                double curTime = this.arrivingTime(c, e);
-                if (curTime < minTime) {
-                    minTime = curTime;
-                    newell = i;
-                }
-            }
-            if(elevatorDest[newell].size() == 0) {
-                this.elevatorDest[newell] = new ArrayList<>(c.getDest());
-            }
-            else {
+        return newell;
+    }
+    private double arrivingTime(CallForElevator c, Elevator e) {
+        double basic_time = e.getTimeForClose() + e.getTimeForOpen() + e.getStopTime();
+        switch (e.getState()) {
+            case Elevator.LEVEL:
+                return basic_time + e.getStartTime() + (Math.abs(c.getDest() - c.getSrc())/e.getSpeed());
 
-                this.elevatorDest[newell].add(c.getDest());
-            }
+            case Elevator.DOWN:
 
+            case Elevator.UP:
+                return basic_time + ((Math.abs(c.getDest() - c.getSrc())/e.getSpeed()));
 
-            return newell;
+            default:
+                return 0;
         }
     }
-    public double arrivingTime(CallForElevator c,Elevator e){
-        double basic_time = e.getTimeForClose()+e.getTimeForOpen()+ e.getStartTime() +e.getStopTime();
-            switch (e.getState()) {
-                case 0:
-                    return basic_time + (e.getSpeed() * Math.abs(c.getDest() - c.getSrc()));
-                case 1:
-                    return basic_time + (e.getSpeed() * Math.abs(c.getDest() - c.getSrc()))
-                            + (basic_time + (e.getSpeed() * Math.abs(c.getSrc() - e.getPos())));
-                case 2:
-                    return basic_time + (e.getSpeed() * Math.abs(c.getDest() - e.getPos()));
-
-                default: return 0;
-            }
+    @Override
+    public int allocateAnElevator(CallForElevator c) {
+        int ans = best(c);
+        if(goup[ans].isEmpty() && godown[ans].isEmpty()){
+            this.building.getElevetor(ans).goTo(c.getSrc());
+            this.building.getElevetor(ans).goTo(c.getDest());
         }
+        else
+        {if (c.getSrc() < c.getDest()){
+            elevdiraction[ans] = Diraction.UP;
+            goup[ans].add(c.getSrc());
+            goup[ans].add(c.getDest());
+        }
+        else {
+            elevdiraction[ans] = Diraction.DOWN;
+            godown[ans].add(c.getSrc());
+            godown[ans].add(c.getDest());
+        }}
+        // אם המעלית לא עוברת התור של הירידה וגם לא עוברת על התר של העליה אז לשלוח אותה כבר מעכשיו לקומת המקור של הקריאה ולשנות את בהתאם הכל
+
+        return ans;
+    }
 
     @Override
     public void cmdElevator(int elev) {
-        Elevator e = this.building.getElevetor(elev);
-        e.goTo(elevatorSrc[elev].get(0));
-        e.stop(elevatorSrc[elev].get(0));
-
-
-
-    }
-
-    /*
-    sending elevator to source/destination
-     */
-    private void call(Elevator e,CallForElevator c){
-        if(c.getState() == 2){
-            e.goTo(c.getDest());
+        // if stand still
+        if (this.building.getElevetor(elev).getState() == this.building.getElevetor(elev).LEVEL) {
+            // if up
+            if (elevdiraction[elev] == Diraction.UP) {
+                // still need to go up
+                if (goup[elev].isEmpty() == false) {
+                    this.building.getElevetor(elev).goTo(goup[elev].poll());
+                    // need to change to down
+                } else if (godown[elev].isEmpty() == false) {
+                    elevdiraction[elev] = Diraction.DOWN;
+                    this.building.getElevetor(elev).goTo(godown[elev].poll());
+                    // no more calls
+                } else {
+                    elevdiraction[elev] = Diraction.NON;
+                }
+                // if down
+            } else {
+                // still need to go down
+                if (godown[elev].isEmpty() == false) {
+                    this.building.getElevetor(elev).goTo(godown[elev].poll());
+                    // need to change to up
+                } else if (goup[elev].isEmpty() == false) {
+                    elevdiraction[elev] = Diraction.UP;
+                    this.building.getElevetor(elev).goTo(goup[elev].poll());
+                    // no more calls
+                } else {
+                    elevdiraction[elev] = Diraction.NON;
+                }
+            }
         }
-        if(c.getState() == 1 || c.getState() == 0)
-            e.goTo(c.getSrc());
-        else
-            return;
-    }
-
-    //getting the direction of given elevator
-    private int getDirection(CallForElevator c) {
-        /*
-        we will check the conditions of each call same as in the 'call' method
-         */
-        //if the elevator is on his way to some floor
-        if(c.getState() == 2)
-            return c.getDest();
-        //if the elevator is on his way to the source floor || he is arrived
-        if(c.getState() == 1 || c.getState() == 0)
-            return c.getSrc();
-        //in case that the elevator is in "rest" mood
-        return 0;
     }
 }
