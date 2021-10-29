@@ -10,7 +10,7 @@ import ex0.simulator.Simulator_A;
  * starting to implement the algorithm.
  */
 public class Ex0_main {
-    public static Long ID0=123456789L, ID1 = null, ID2 = null;
+    public static Long ID0=321243339L, ID1 = 206431082L, ID2 = null;
     public static void main(String[] ar) {
         String codeOwner = codeOwner();
         Simulator_A.setCodeOwner(codeOwner);
@@ -35,9 +35,9 @@ public class Ex0_main {
     }
 
     private static String codeOwner() {
-        String owners = "none";
-        if(ID0!=null) {owners = ""+ID0;}
-        if(ID1!=null) {owners += ","+ID1;}
+        String owners = "Artem Shabalin and Anna Pinchuk";
+        if(ID0!=null) {owners = "Artem Shabalin"+ID0;}
+        if(ID1!=null) {owners += ",Anna Pinchuk"+ID1;}
         if(ID2!=null) {owners += ","+ID2;}
         return owners;
     }
