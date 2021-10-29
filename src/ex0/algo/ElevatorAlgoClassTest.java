@@ -14,37 +14,27 @@ class ElevatorAlgoClassTest {
     public Building building;
     ElevatorAlgoClass bestAlgo;
 
+    /**
+     * This is Test Class
+     * using JUnit
+     * by Artem Shabalin and Anna Pinchuk
+     * enjoy
+     */
     public ElevatorAlgoClassTest(){
-        Simulator_A.initData(9,null);
+        Simulator_A.initData(5,null);
         this.building = Simulator_A.getBuilding();
         bestAlgo = new ElevatorAlgoClass(building);
-
     }
 
     @Test
     void allocateAnElevator() {
-        Simulator_A.initData(3,null);
-        bestAlgo = new ElevatorAlgoClass(Simulator_A.getBuilding());
-        building = Simulator_A.getBuilding();
-        Call_A call = new Call_A(9,0,20);
+        Call_A call = new Call_A(0,8,20);
+        Call_A call1 = new Call_A(0,8,20);
         Simulator_A.initAlgo(bestAlgo);
         Simulator_A.runSim();
         Simulator_A.report();
-        building.getElevetor(1).goTo(3);
-        building.getElevetor(2).goTo(7);
-        building.getElevetor(3).goTo(0);
-        assertEquals(0, bestAlgo.allocateAnElevator(call));
-
-        CallForElevator call1 = new Call_A(1, 60, 0);
-        Simulator_A.initAlgo(bestAlgo);
-        Simulator_A.runSim();
-        Simulator_A.report();
-        building.getElevetor(1).goTo(7);
-        building.getElevetor(2).goTo(2);
-        building.getElevetor(3).goTo(-1);
-
-        assertEquals(0, bestAlgo.allocateAnElevator(call1));
-        assertEquals(0, bestAlgo.allocateAnElevator(call1));
+        assertEquals(2,bestAlgo.allocateAnElevator(call));
+        assertEquals(5,bestAlgo.allocateAnElevator(call1));
     }
 
     @Test
@@ -56,11 +46,12 @@ class ElevatorAlgoClassTest {
     @Test
     void cmdElevator() {
         allocateAnElevator();
-        building = Simulator_A.getBuilding();
-        assertEquals(1,building.getElevetor(0).getState());
+        assertEquals(-1,building.getElevetor(0).getState());
         assertEquals(1,building.getElevetor(1).getState());
-        assertEquals(1,building.getElevetor(2).getState());
-        assertEquals(1,building.getElevetor(3).getState());
+        assertEquals(-1,building.getElevetor(2).getState());
+        assertEquals(-1,building.getElevetor(3).getState());
+        assertEquals(1,building.getElevetor(6).getState());
+
     }
 
     @Test
